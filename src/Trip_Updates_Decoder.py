@@ -21,7 +21,6 @@ def process_full_trip_updates(pb_filepath, db_filepath):
             incrementality INTEGER,
             timestamp INTEGER,
             feed_version TEXT
-
         );
 
         CREATE TABLE IF NOT EXISTS trip_update (
