@@ -9,14 +9,16 @@ STATIC_FEED_URL = "https://webapps.regionofwaterloo.ca/api/grt-routes/api/static
 RAW_FOLDER = Path("GRT_GTFS/Static_Feed")
 
 try:
+    with urllib.request.urlopen(STATIC_FEED_URL) as response:
+        feed_bytes = response.read()
+
     if RAW_FOLDER.exists():
         shutil.rmtree(RAW_FOLDER)
 
     RAW_FOLDER.mkdir(parents=True, exist_ok=True)
 
-    with urllib.request.urlopen(STATIC_FEED_URL) as response:
-        with zipfile.ZipFile(io.BytesIO(response.read())) as z:
-            z.extractall(RAW_FOLDER)
+    with zipfile.ZipFile(io.BytesIO(feed_bytes)) as z:
+        z.extractall(RAW_FOLDER)
 
     print(f"Successfully extracted files to: {RAW_FOLDER}")
 

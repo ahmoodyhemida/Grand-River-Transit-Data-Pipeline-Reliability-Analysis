@@ -6,10 +6,26 @@ from google.transit import gtfs_realtime_pb2
 TRIP_UPDATES_FOLDER = Path("GRT_GTFS/Trip_Updates")
 db_filepath = Path("GRT_GTFS/Trip_Updates_Static_Feed.db")
 
-def process_full_trip_updates(pb_filepath, db_filepath):
+def get_fetched_at(pb_filepath):
     filename = os.path.basename(pb_filepath)
     fetched_at = filename.replace('trip_updates_', '').replace('.pb', '')
-    fetched_at = fetched_at[:-7]
+    return fetched_at[:-7]
+
+def get_decoded_snapshots(db_filepath):
+    if not db_filepath.exists():
+        return set()
+
+    conn = sqlite3.connect(db_filepath)
+    try:
+        rows = conn.execute("SELECT fetched_at FROM feed_header_update")
+        return {row[0] for row in rows}
+    except sqlite3.OperationalError:
+        return set()
+    finally:
+        conn.close()
+
+def process_full_trip_updates(pb_filepath, db_filepath):
+    fetched_at = get_fetched_at(pb_filepath)
 
     conn = sqlite3.connect(db_filepath)
     cursor = conn.cursor()
@@ -194,8 +210,12 @@ def process_full_trip_updates(pb_filepath, db_filepath):
     conn.close()
 
 pb_files = sorted(TRIP_UPDATES_FOLDER.glob("*.pb"))
+decoded = get_decoded_snapshots(db_filepath)
+new_files = [f for f in pb_files if get_fetched_at(f) not in decoded]
 
-for pb_filepath in pb_files:
+print(f"{len(pb_files) - len(new_files)} already decoded, {len(new_files)} new.")
+
+for pb_filepath in new_files:
     print(f"Processing: {pb_filepath.name}")
     try:
         process_full_trip_updates(pb_filepath, db_filepath)

@@ -25,6 +25,7 @@ This project collects and analyzes Grand River Transit (GRT) GTFS data. It combi
 ```text
 .
 ├── src/
+│   ├── run_pipeline.py                # Runs the download, collect and decode steps in order
 │   ├── Static_Feed_Downloader.py      # Downloads the static GRT feed
 │   ├── Trip_Updates_Collector.py      # Collects live trip-update snapshots
 │   └── Trip_Updates_Decoder.py        # Decodes snapshots into SQLite
@@ -77,35 +78,31 @@ pip install jupyter
 
 ## Run the Pipeline
 
-### 1. Download static schedule data
+### 1. Collect and decode the data
+
+```bash
+python src/run_pipeline.py
+```
+
+This runs three steps in order:
+
+1. **Downloads the static schedule** into `GRT_GTFS/Static_Feed/`. This runs first so the schedule matches the trips you collect. If the static feed already exists, this step is skipped so it stays consistent with data you already collected. To force a fresh download, run `python src/Static_Feed_Downloader.py`.
+2. **Collects live trip updates** every 60 seconds and saves timestamped `.pb` files in `GRT_GTFS/Trip_Updates/`. Let it run for as long as you want to collect data, then press `Ctrl+C` to stop.
+3. **Decodes the collected data** into `GRT_GTFS/Trip_Updates_Static_Feed.db`. This starts automatically after you stop collecting. Snapshots that were already decoded are skipped, so it is safe to run the pipeline more than once; new snapshots are added to the existing database.
+
+### 2. Run the analysis
+
+Open `notebook.ipynb` in VS Code or Jupyter and run the cells in order. The notebook loads the static schedule data into SQLite, creates indexes, runs the analysis, and generates the charts.
+
+### Running the steps individually
+
+Each step can also be run on its own:
 
 ```bash
 python src/Static_Feed_Downloader.py
-```
-
-This downloads and extracts the GRT static GTFS files into `GRT_GTFS/Static_Feed/`.
-
-### 2. Collect live trip updates
-
-```bash
 python src/Trip_Updates_Collector.py
-```
-
-The collector polls GRT's GTFS-Realtime trip-updates feed every 60 seconds and saves timestamped `.pb` files in `GRT_GTFS/Trip_Updates/`.
-
-Let the script run for as long as you want to collect data, then stop it with `Ctrl+C`.
-
-### 3. Decode the collected data
-
-```bash
 python src/Trip_Updates_Decoder.py
 ```
-
-This reads the `.pb` files and writes the decoded real-time data to `GRT_GTFS/Trip_Updates_Static_Feed.db`.
-
-### 4. Run the analysis
-
-Open `notebook.ipynb` in VS Code or Jupyter and run the cells in order. The notebook loads the static schedule data into SQLite, creates indexes, runs the analysis, and generates the charts.
 
 ## Analysis
 
