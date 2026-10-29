@@ -43,5 +43,8 @@ try:
 
         time.sleep(INTERVAL_SECONDS)
 
+except KeyboardInterrupt:
+    print("\nStopped collecting.")
+
 finally:
     session.close()

@@ -13,7 +13,7 @@ if (STATIC_FEED_FOLDER / "stop_times.txt").exists():
 else:
     run("src/Static_Feed_Downloader.py")
 
-print("Collecting live data. Press Control + C to stop and decode.")
+print("Collecting live data. Decoding starts automatically after you stop.")
 
 try:
     run("src/Trip_Updates_Collector.py")
